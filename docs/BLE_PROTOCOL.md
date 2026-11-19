@@ -78,10 +78,15 @@ Startup or changed mechanics invalidate calibration.
 
 Error outside the deadband requests gain * error in elbow degrees/s, limited by
 speed and acceleration, converted to motor rad/s and capped at ±50 rad/s.
+A stopping-distance bound with a one-control-period braking allowance reduces
+requested speed near the target. Encoder tracking also updates while hold is off
+whenever fresh feedback is available.
 Outward motion at an elbow limit is suppressed. Stale/non-finite feedback
 requests zero; the existing CAN task's feedback timeout still faults/inhibits.
-Defaults: ratio 1, direction +1, limits 0–120°, gain 2/s, speed 10°/s,
-acceleration 30°/s², deadband 1°. Do not assume these establish physical limits.
+Defaults: ratio 1, direction +1, limits 0–120°, gain 40/s, speed 720°/s,
+acceleration 7200°/s², deadband 0.5°. Configurable speed is up to 720°/s and
+acceleration up to 10000°/s². Existing SD configurations retain their saved
+values. Do not assume these establish physical limits or guarantee settling time.
 
 ## USB extension operations
 

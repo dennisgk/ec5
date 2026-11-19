@@ -19,10 +19,24 @@ accidental device selection; it is not cryptographic authentication.
 
 In Angle Control, stop hold before applying settings. Set the motor turns per
 elbow turn, direction, and elbow limits. Calibrate at the position you designate
-0°, then Enable hold. Drag the forearm to change the target. Calibration/enable
+0°, then Enable hold. Drag in the arm view to point the forearm toward the
+mouse/finger's intersection with its rotation plane. The view is rotated so the
+lower brace points down at 0°. The model and cyan needle follow reported encoder
+feedback; the yellow handle shows the requested angle. Raycast markers identify
+the surface under the pointer and the grabbed point on the moving model.
+Calibration/enable
 may briefly enable the motor at zero speed to obtain fresh encoder feedback.
 The firmware computes position control at 100 Hz; touch/mouse targets are
 coalesced at up to 20 Hz. No raw EMG or FFT data is streamed over BLE.
+
+Controls use 18-point text and at least 48-point interaction heights on Windows
+and iPhone. Angle settings include Fast/Gentle presets and custom gain, speed,
+acceleration and deadband. Stop hold before applying a preset. Fast defaults are
+gain 40/s, speed limit 720°/s, acceleration 7200°/s², deadband 0.5°. Actual motion
+depends on motor response, transmission ratio and the motor's ±50 rad/s limit;
+the firmware reduces requested speed near the target to brake.
+Existing SD profiles keep their saved response values. To update one, select
+Fast, Apply angle settings, then save autoconfig from the updated USB app.
 
 Disconnecting or backgrounding the phone does **not** stop hold. USB remains
 available for settings and for **Disable Bluetooth control**, which stops motion

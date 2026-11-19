@@ -1,3 +1,4 @@
+use crate::interaction::{Geometry, Triangle};
 use eframe::{
     egui,
     egui_wgpu::{self, wgpu},
@@ -32,9 +33,7 @@ pub struct Model {
     color: wgpu::TextureView,
     depth: wgpu::TextureView,
     pub texture: egui::TextureId,
-    pivot: Vec3,
-    center: Vec3,
-    radius: f32,
+    pub geometry: Geometry,
 }
 impl Model {
     pub fn new(state: &egui_wgpu::RenderState) -> Result<Self, String> {
@@ -196,21 +195,32 @@ impl Model {
             color,
             depth,
             texture: id,
-            pivot,
-            center: (low + high) * 0.5,
-            radius: (high - low).length() * 0.55,
+            geometry: Geometry {
+                pivot,
+                center: (low + high) * 0.5,
+                radius: (high - low).length() * 0.55,
+                front: high.y + (high - low).length() * 0.01,
+                triangles: vertices
+                    .chunks_exact(3)
+                    .map(|v| Triangle {
+                        points: [
+                            Vec3::from(v[0].position),
+                            Vec3::from(v[1].position),
+                            Vec3::from(v[2].position),
+                        ],
+                        moving: v[0].moving != 0.,
+                    })
+                    .collect(),
+            },
         })
     }
     fn view(&self) -> Mat4 {
-        let r = self.radius;
-        let eye = self.center + Vec3::new(r * 0.12, r * 3.0, r * 0.05);
-        Mat4::perspective_rh(42_f32.to_radians(), 1.0, r * 0.01, r * 10.0)
-            * Mat4::look_at_rh(eye, self.center, Vec3::Z)
+        self.geometry.view()
     }
     pub fn draw(&self, degrees: f32) {
         let uniforms = Uniforms {
             matrix: self.view().to_cols_array_2d(),
-            pivot: self.pivot.extend(1.0).to_array(),
+            pivot: self.geometry.pivot.extend(1.0).to_array(),
             angle: [degrees.to_radians(), 0., 0., 0.],
         };
         self.queue
@@ -250,17 +260,6 @@ impl Model {
             pass.draw(0..self.count, 0..1);
         }
         self.queue.submit([encoder.finish()]);
-    }
-    pub fn drag_angle(&self, start: egui::Pos2, now: egui::Pos2, rect: egui::Rect) -> f32 {
-        let pivot = self.view().project_point3(self.pivot);
-        let screen = egui::pos2(
-            rect.left() + (pivot.x + 1.) * 0.5 * rect.width(),
-            rect.top() + (1. - pivot.y) * 0.5 * rect.height(),
-        );
-        let a = start - screen;
-        let b = now - screen;
-        let delta = b.y.atan2(b.x) - a.y.atan2(a.x);
-        delta.sin().atan2(delta.cos()).to_degrees()
     }
 }
 

@@ -80,9 +80,9 @@ pub fn validate_settings(s: &[f32; 8]) -> Result<(), String> {
         || s[4] <= 0.
         || s[4] > 50.
         || s[5] <= 0.
-        || s[5] > 180.
+        || s[5] > 720.
         || s[6] <= 0.
-        || s[6] > 1000.
+        || s[6] > 10000.
         || !(0.0..=10.).contains(&s[7])
     {
         return Err(
@@ -97,6 +97,8 @@ mod tests {
     use super::*;
     #[test]
     fn commands_fit_minimum_att_and_identity_is_strict() {
+        assert!(validate_settings(&[1., 1., 0., 120., 40., 720., 7200., 0.5]).is_ok());
+        assert!(validate_settings(&[1., 1., 0., 120., 40., 721., 7200., 0.5]).is_err());
         assert!(validate_settings(&[1., 1., 0., 120., 2., 10., 30., 1.]).is_ok());
         assert!(validate_settings(&[1., 1., 120., 0., 2., 10., 30., 1.]).is_err());
         assert!(validate_settings(&[1., 0., 0., 120., 2., 10., 30., 1.]).is_err());
