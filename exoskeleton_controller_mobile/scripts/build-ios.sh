@@ -6,6 +6,14 @@ if [[ "$(uname -s)" != Darwin ]]; then
     exit 1
 fi
 command -v xcodegen >/dev/null || { echo "Install XcodeGen: brew install xcodegen" >&2; exit 1; }
+if [[ -z "${DEVELOPER_DIR:-}" && -d /Applications/Xcode.app/Contents/Developer ]]; then
+    export DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer
+fi
+if [[ "${1:-}" != "--unsigned" ]]; then
+    APPLE_TEAM_ID="$(python3 scripts/detect_apple_team.py)"
+    export APPLE_TEAM_ID
+    echo "Apple signing team: $APPLE_TEAM_ID"
+fi
 rustup target add aarch64-apple-ios
 cargo build --release --locked --lib --target aarch64-apple-ios
 (cd ios && xcodegen generate)
@@ -15,7 +23,6 @@ if [[ "${1:-}" == "--unsigned" ]]; then
         CODE_SIGNING_ALLOWED=NO build
     exit
 fi
-: "${APPLE_TEAM_ID:?Set APPLE_TEAM_ID to your Apple signing team ID}"
 xcodebuild -project ios/BrachiFlex.xcodeproj -scheme BrachiFlex -configuration Release \
     -destination 'generic/platform=iOS' -archivePath ios/build/BrachiFlex.xcarchive \
     DEVELOPMENT_TEAM="$APPLE_TEAM_ID" -allowProvisioningUpdates archive

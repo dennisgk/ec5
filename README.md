@@ -48,9 +48,9 @@ clone of this repository:
 cd exoskeleton_controller_mobile
 bash scripts/build-ios.sh --unsigned
 
-# Signed archive, using your Apple developer team:
-export APPLE_TEAM_ID=YOUR_TEAM_ID
+# Signed archive and IPA, automatically detecting your Apple developer team:
 bash scripts/build-ios.sh
+bash scripts/export-ipa.sh
 ```
 
 See the [mobile README](exoskeleton_controller_mobile/README.md) for signing and

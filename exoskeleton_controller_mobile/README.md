@@ -59,14 +59,20 @@ Install Xcode, select its command-line tools, install Rust and XcodeGen
 # Compile and link without signing (also used in CI):
 bash scripts/build-ios.sh --unsigned
 
-# Archive with your Apple team and Xcode-managed signing:
-export APPLE_TEAM_ID=YOUR_TEAM_ID
+# Archive with automatically detected Apple team and Xcode-managed signing:
 bash scripts/build-ios.sh
 
-# Copy ios/ExportOptions.example.plist to an ignored local file, set the team,
-# and select the export method supported by your provisioning/account:
-bash scripts/export-ipa.sh /absolute/path/ExportOptions.local.plist
+# Export a development/debugging IPA with automatically detected team:
+bash scripts/export-ipa.sh
 ```
+
+The scripts select the installed full Xcode if DEVELOPER_DIR is unset, including
+when xcode-select still points at Command Line Tools. Team detection reads local
+Xcode provisioning-team metadata, valid signing certificates (the subject OU,
+not the CN suffix), and provisioning profiles. It never exports private keys or
+reads Apple ID credentials. Multiple ambiguous teams require an explicit
+`export APPLE_TEAM_ID=YOUR_ACTUAL_TEAM_ID`. You can pass your own ExportOptions
+plist to export-ipa.sh or set APPLE_EXPORT_METHOD for another distribution method.
 
 The output IPA is in `ios/build/ipa/`. Alternatively export the archive from
 Xcode Organizer. A target triple alone cannot create an installable, signed IPA;
