@@ -534,7 +534,7 @@ static void motor_task(void *argument)
                                                      : desired_enabled;
             float angle_velocity = 0;
             bool angle_selected =
-                angle_output(feedback.position_rad,
+                angle_output(feedback.position_rad, feedback.velocity_rad_s,
                              feedback.valid && now - feedback.time_us < 100000, &angle_velocity);
             if (angle_selected) {
                 request_source = true;

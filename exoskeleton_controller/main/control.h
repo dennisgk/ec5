@@ -30,5 +30,5 @@ uint8_t angle_calibrate(void);
 uint8_t angle_enable(bool enabled);
 uint8_t angle_target(float target);
 // Called only by the 100 Hz motor task; no allocation or transport work.
-bool angle_output(float encoder, bool fresh, float *velocity);
+bool angle_output(float encoder, float measured_velocity, bool fresh, float *velocity);
 uint8_t control_ble_command(uint8_t operation, const uint8_t *data, size_t size);

@@ -76,10 +76,15 @@ or DSP work. Ratio is **motor rotations per elbow rotation**. Elbow degrees =
 wraps over [-4pi,+4pi]; continuous hold unwraps consecutive feedback positions.
 Startup or changed mechanics invalidate calibration.
 
-Error outside the deadband requests gain * error in elbow degrees/s, limited by
-speed and acceleration, converted to motor rad/s and capped at ±50 rad/s.
-A stopping-distance bound with a one-control-period braking allowance reduces
-requested speed near the target. Encoder tracking also updates while hold is off
+The outer position loop uses measured motor velocity, converted to elbow degrees/s,
+to preview 150 ms of motion before braking. Its requested elbow velocity is
+`gain / (1 + gain * 0.15) * (position_error - measured_elbow_velocity * 0.15)`.
+This bounds the effective outer-loop gain even with existing aggressive profiles.
+Speed and stopping-distance limits still apply; motor velocity remains capped at
+±50 rad/s. Acceleration limits increases in command magnitude. Braking commands
+decrease immediately, and reversals pass through zero before accelerating again.
+These are command limits, not a measurement of the arm's physical braking ability.
+Encoder tracking also updates while hold is off
 whenever fresh feedback is available.
 Outward motion at an elbow limit is suppressed. Stale/non-finite feedback
 requests zero; the existing CAN task's feedback timeout still faults/inhibits.

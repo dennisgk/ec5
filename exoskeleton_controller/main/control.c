@@ -198,10 +198,10 @@ uint8_t angle_target(float target)
     return STATUS_OK;
 }
 
-bool angle_output(float encoder, bool fresh, float *velocity)
+bool angle_output(float encoder, float measured_velocity, bool fresh, float *velocity)
 {
     portENTER_CRITICAL(&guard);
-    bool enabled = angle_math_step(&angle, encoder, fresh, velocity);
+    bool enabled = angle_math_step(&angle, encoder, measured_velocity, fresh, velocity);
     portEXIT_CRITICAL(&guard);
     return enabled;
 }

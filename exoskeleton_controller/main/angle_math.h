@@ -13,9 +13,10 @@ static inline bool angle_math_valid(const angle_config *c)
            c->deadband >= 0 && c->deadband <= 10;
 }
 
-static inline bool angle_math_step(angle_state *angle, float encoder, bool fresh, float *velocity)
+static inline bool angle_math_step(angle_state *angle, float encoder, float measured_velocity,
+                                   bool fresh, float *velocity)
 {
-    if (!fresh || !isfinite(encoder)) {
+    if (!fresh || !isfinite(encoder) || !isfinite(measured_velocity)) {
         angle->velocity = *velocity = 0;
         return angle->enabled;
     }
@@ -42,13 +43,28 @@ static inline bool angle_math_step(angle_state *angle, float encoder, bool fresh
         return false;
     }
     float error = angle->target - angle->measured;
+    float elbow_velocity = measured_velocity * 57.295779513f * c.direction / c.ratio;
+    // The inner speed loop and physical arm do not follow commands instantaneously.
+    // Preview 150 ms of measured motion to brake before crossing the target. Limit
+    // the outer-loop gain accordingly, including for existing aggressive profiles.
+    const float braking_preview = 0.15f;
+    float gain = c.gain / (1 + c.gain * braking_preview);
+    float wanted = gain * (error - elbow_velocity * braking_preview);
     float distance = fmaxf(0, fabsf(error) - c.deadband);
     float step = c.acceleration * 0.01f;
     // Reserve one control period for braking instead of assuming continuous updates.
     float braking_speed = fmaxf(0, sqrtf(2 * c.acceleration * distance + step * step) - step);
-    float magnitude = fminf(c.speed, fminf(c.gain * fabsf(error), braking_speed));
-    float wanted = copysignf(magnitude, error);
-    angle->velocity += fminf(step, fmaxf(-step, wanted - angle->velocity));
+    float limit = fminf(c.speed, braking_speed);
+    wanted = fminf(limit, fmaxf(-limit, wanted));
+    // Slew-limit acceleration only. Never prolong a fast command when braking;
+    // pass through zero before accelerating in the opposite direction.
+    if (wanted * angle->velocity < 0) {
+        angle->velocity = 0;
+    } else if (fabsf(wanted) <= fabsf(angle->velocity)) {
+        angle->velocity = wanted;
+    } else {
+        angle->velocity += fminf(step, fmaxf(-step, wanted - angle->velocity));
+    }
     if (fabsf(error) <= c.deadband || !isfinite(angle->measured) ||
         (angle->measured <= c.minimum && angle->velocity < 0) ||
         (angle->measured >= c.maximum && angle->velocity > 0)) {
