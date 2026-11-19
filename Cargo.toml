@@ -1,0 +1,34 @@
+[package]
+name = "exoskeleton_controller_mobile"
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.93"
+
+[lib]
+name = "brachiflex_mobile"
+crate-type = ["rlib", "staticlib"]
+
+[[bin]]
+name = "BrachiFlex"
+path = "src/main.rs"
+
+[dependencies]
+eframe = { version = "=0.33.3", default-features = false, features = ["wgpu", "default_fonts"] }
+btleplug = "0.11.8"
+tokio = { version = "1", features = ["rt-multi-thread", "sync", "time", "macros"] }
+futures = "0.3"
+uuid = "1"
+crossbeam-channel = "0.5"
+glam = { version = "0.30", features = ["bytemuck"] }
+bytemuck = { version = "1", features = ["derive"] }
+gltf = { version = "1.4", default-features = false, features = ["utils", "names"] }
+
+[target.'cfg(target_os = "windows")'.dependencies]
+wgpu = { version = "=27.0.1", default-features = false, features = ["dx12", "wgsl"] }
+
+[target.'cfg(any(target_os = "ios", target_os = "macos"))'.dependencies]
+wgpu = { version = "=27.0.1", default-features = false, features = ["metal", "wgsl"] }
+
+[dev-dependencies]
+pollster = "0.4"
+image = { version = "0.25", default-features = false, features = ["png"] }
