@@ -8,7 +8,7 @@ settings:
     TARGETED_DEVICE_FAMILY: "1"
     ENABLE_BITCODE: NO
     CODE_SIGN_STYLE: Automatic
-    OTHER_LDFLAGS: "$(inherited) -ObjC -lc++ -lresolv -liconv"
+    OTHER_LDFLAGS: "$(inherited) -ObjC -lbrachiflex_mobile -lc++ -lresolv -liconv"
 targets:
   BrachiFlex:
     type: application
@@ -21,8 +21,6 @@ targets:
         GENERATE_INFOPLIST_FILE: NO
         LIBRARY_SEARCH_PATHS: "$(inherited) $(SRCROOT)/../target/aarch64-apple-ios/release"
     dependencies:
-      - library: ../target/aarch64-apple-ios/release/libbrachiflex_mobile.a
-        embed: false
       - sdk: UIKit.framework
       - sdk: Foundation.framework
       - sdk: CoreFoundation.framework

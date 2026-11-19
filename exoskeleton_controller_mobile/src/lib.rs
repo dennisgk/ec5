@@ -366,7 +366,7 @@ impl App {
                     response.rect,
                 );
                 painter.circle_filled(marker, 7., egui::Color32::LIGHT_GREEN);
-                painter.circle_stroke(marker, 9., egui::Stroke::new(2., egui::Color32::WHITE));
+                painter.circle_stroke(marker, 9., egui::Stroke::new(2_f32, egui::Color32::WHITE));
             } else if let Some(point) = hovered {
                 let marker = geometry.project(
                     geometry.world_point(point, self.state.measured),
@@ -378,7 +378,7 @@ impl App {
                     egui::Color32::LIGHT_GRAY
                 };
                 painter.circle_filled(marker, 5., color);
-                painter.circle_stroke(marker, 7., egui::Stroke::new(1.5, egui::Color32::WHITE));
+                painter.circle_stroke(marker, 7., egui::Stroke::new(1.5_f32, egui::Color32::WHITE));
             }
             if response.drag_stopped_by(egui::PointerButton::Primary) {
                 if self.drag_start.is_some() && enabled {
@@ -406,7 +406,7 @@ fn draw_angle_dial(
         .collect();
     painter.add(egui::Shape::line(
         points,
-        egui::Stroke::new(3., egui::Color32::GRAY),
+        egui::Stroke::new(3_f32, egui::Color32::GRAY),
     ));
     let actual = geometry.handle_position(measured, rect);
     let requested = geometry.handle_position(target, rect);
@@ -416,10 +416,10 @@ fn draw_angle_dial(
     } else {
         egui::Color32::GRAY
     };
-    painter.line_segment([center, actual], egui::Stroke::new(3., cyan));
+    painter.line_segment([center, actual], egui::Stroke::new(3_f32, cyan));
     painter.circle_filled(actual, 7., cyan);
     painter.line_segment([center, requested], egui::Stroke::new(1.5, yellow));
-    painter.circle_stroke(requested, 12., egui::Stroke::new(3., yellow));
+    painter.circle_stroke(requested, 12., egui::Stroke::new(3_f32, yellow));
     painter.circle_filled(center, 5., cyan);
     painter.text(
         center + egui::vec2(14., -22.),
