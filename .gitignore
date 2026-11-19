@@ -1,14 +1,23 @@
-/target/
-/ios/build/
-/ios/DerivedData/
-/ios/BrachiFlex.xcodeproj/
-*.xcuserstate
+# Generated firmware and Rust output (all projects)
+build/
+target/
+managed_components/
+sdkconfig
+sdkconfig.old
+*.log
+
+# Local Apple build and signing files
+DerivedData/
 xcuserdata/
-*.ipa
+*.xcuserstate
 *.xcarchive
+*.ipa
 *.p12
 *.mobileprovision
-.DS_Store
-*.log
-.env
 ExportOptions.local.plist
+
+# Editor, operating-system and Blender backup files
+.env
+.DS_Store
+Thumbs.db
+*.blend[0-9]*

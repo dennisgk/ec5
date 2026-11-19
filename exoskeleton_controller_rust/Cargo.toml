@@ -1,0 +1,23 @@
+[package]
+name = "exoskeleton_controller_rust"
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.93"
+
+[dependencies]
+eframe = { version = "=0.33.3", default-features = false, features = ["wgpu", "default_fonts"] }
+egui_plot = "=0.34.1"
+crossbeam-channel = "0.5"
+serialport = "4"
+base64 = "0.22"
+crc32fast = "1"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+rfd = "0.16"
+
+[target.'cfg(target_os = "windows")'.dependencies]
+wgpu = { version = "=27.0.1", default-features = false, features = ["dx12", "wgsl"] }
+
+[[bin]]
+name = "BrachiGoon"
+path = "src/main.rs"

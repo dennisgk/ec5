@@ -1,0 +1,6 @@
+menu "EC5 serial transport"
+config EC5_SERIAL_WINDOW
+    int "Maximum outstanding serial chunks"
+    range 1 16
+    default 4
+endmenu

@@ -1,105 +1,75 @@
-# BrachiFlex EC5
+# Exoskeleton Controller 5
 
-Rust egui/wgpu BLE application for Windows and iPhone. Connect, Config,
-Angle Control, Auto, and Signals are the five pages. Config, Auto, and Signals
-are intentionally empty. Only Angle Control commands the arm in this version.
+This repository contains the complete EC5 project:
+
+| Directory | Purpose |
+|---|---|
+| `exoskeleton_controller` | ESP-IDF 5.5.2 ESP32-C6 firmware, LP acquisition, motor/DSP control, USB, BLE and SD autoconfig |
+| `exoskeleton_controller_rust` | Windows egui/wgpu USB configuration and signal application |
+| `exoskeleton_controller_mobile` | Windows/iPhone egui/wgpu BLE angle controller |
+| `work` | Original and strap-free Blender working models and GLB exporter |
+
+Generated builds, local SDK configuration, logs and signing credentials are
+excluded. Firmware build defaults, Rust lockfiles and application model assets
+are included. The mobile application's earlier commits are retained in history;
+the current tree places all projects together under this repository root.
 
 ## Windows
 
+In an ESP-IDF 5.5.2 terminal:
+
 ```powershell
+cd exoskeleton_controller
+idf.py build
+```
+
+Use separate terminals for the two applications:
+
+```powershell
+cd exoskeleton_controller_rust
+cargo run --release --locked
+```
+
+```powershell
+cd exoskeleton_controller_mobile
 cargo run --release --locked --bin BrachiFlex
 ```
 
-Use the matching EC5 firmware and updated USB app. Connect USB, click
-**Enable Bluetooth control**, then scan in BrachiFlex and select the intended
-`BrachiGoon-XXXXXX`. Scanning filters the EC5 service; connection verifies the
-service, identity signature and protocol before exposing controls. There is no
-automatic connection or automatic motor enable. Identity filtering prevents
-accidental device selection; it is not cryptographic authentication.
+Close the USB application before flashing or opening IDF Monitor. Bluetooth
+advertising is enabled through the USB application's Enable Bluetooth control
+button or a saved autoconfig setting.
 
-In Angle Control, stop hold before applying settings. Set the motor turns per
-elbow turn, direction, and elbow limits. Calibrate at the position you designate
-0°, then Enable hold. Drag in the arm view to point the forearm toward the
-mouse/finger's intersection with its rotation plane. The view is rotated so the
-lower brace points down at 0°. The model and cyan needle follow reported encoder
-feedback; the yellow handle shows the requested angle. Raycast markers identify
-the surface under the pointer and the grabbed point on the moving model.
-Calibration/enable
-may briefly enable the motor at zero speed to obtain fresh encoder feedback.
-The firmware computes position control at 100 Hz; touch/mouse targets are
-coalesced at up to 20 Hz. No raw EMG or FFT data is streamed over BLE.
+## iPhone build on a Mac
 
-Controls use 18-point text and at least 48-point interaction heights on Windows
-and iPhone. Angle settings include Fast/Gentle presets and custom gain, speed,
-acceleration and deadband. Stop hold before applying a preset. Fast defaults are
-gain 40/s, speed limit 720°/s, acceleration 7200°/s², deadband 0.5°. Actual motion
-depends on motor response, transmission ratio and the motor's ±50 rad/s limit;
-the firmware reduces requested speed near the target to brake.
-Existing SD profiles keep their saved response values. To update one, select
-Fast, Apply angle settings, then save autoconfig from the updated USB app.
-
-Disconnecting or backgrounding the phone does **not** stop hold. USB remains
-available for settings and for **Disable Bluetooth control**, which stops motion
-and returns ownership to USB. Stop also remains available from either app.
-CAN faults and stale motor feedback still inhibit output. After a reboot,
-Angle Control must be recalibrated and enabled again.
-
-The arm is the strap-free, optimized GLB in `assets/`. The original and edited
-Blender working copies and exporter live in the parent EC5 `work/` directory;
-they are not required to build this repository. The fixed and moving assemblies
-and elbow pivot are retained as named nodes. Rendering uses DirectX 12 on
-Windows and Metal on Apple platforms.
-
-## iPhone / IPA on a Mac
-
-Install Xcode, select its command-line tools, install Rust and XcodeGen
-(`brew install xcodegen`), then clone/sync this repository.
+Install full Xcode, Rust 1.93+ and XcodeGen (`brew install xcodegen`). From a
+clone of this repository:
 
 ```bash
-# Compile and link without signing (also used in CI):
+cd exoskeleton_controller_mobile
 bash scripts/build-ios.sh --unsigned
 
-# Archive with your Apple team and Xcode-managed signing:
+# Signed archive, using your Apple developer team:
 export APPLE_TEAM_ID=YOUR_TEAM_ID
 bash scripts/build-ios.sh
-
-# Copy ios/ExportOptions.example.plist to an ignored local file, set the team,
-# and select the export method supported by your provisioning/account:
-bash scripts/export-ipa.sh /absolute/path/ExportOptions.local.plist
 ```
 
-The output IPA is in `ios/build/ipa/`. Alternatively export the archive from
-Xcode Organizer. A target triple alone cannot create an installable, signed IPA;
-Apple signing/provisioning and a Mac are required. The included example uses
-development/debugging export; distribution methods depend on your account.
-Set a different bundle identifier in `ios/project.yml` if your team needs it.
+See the [mobile README](exoskeleton_controller_mobile/README.md) for signing and
+IPA export. The iPhone build requires verification on macOS and the intended
+device; Windows tests do not validate iOS linking or signing.
 
-The small Objective-C executable enters Rust on the main thread. winit owns
-UIApplication and egui owns the UI; there is no WebView. The Info.plist includes
-Bluetooth usage descriptions. BLE permission refusal is reported in Connect.
-No background Bluetooth entitlement is requested: the controller holds locally
-while iOS suspends the app, and reconnection reads current state.
+## Control behavior
 
-Windows builds/tests do not establish that an iOS SDK, signing setup, physical
-iPhone BLE connection, or real motor works. Run the unsigned Mac CI job and then
-test a signed application on the intended iPhone/Xcode combination.
+Settings and active local motor logic persist across USB/BLE disconnects.
+Explicit Stop, control handoff and motor faults still stop/inhibit output.
+Saved manual/EMG control can resume at boot. Angle Hold needs calibration after
+a restart. Saving autoconfig is explicit; old profiles retain their saved
+response values. Select Fast and Apply angle settings to replace an old gentle
+response, then save autoconfig again if desired.
 
-## Checks
+Detailed documentation:
 
-```powershell
-cargo fmt --check
-cargo clippy --locked --all-targets -- -D warnings
-cargo test --locked
-cargo build --release --locked
-# Optional offscreen renderer check; no Bluetooth access:
-cargo test --locked --lib render_arm_without_ble -- --ignored
-```
-
-No check scans for or connects to a physical BLE device. The GitHub workflow also
-builds and links an unsigned iOS application on macOS. Hardware acceptance should
-cover wrong-device rejection, permission denial, repeated connect/disconnect,
-USB takeover while dragging, continued local hold without the phone, CAN feedback
-loss, and calibration with the actual transmission ratio and direction.
-
-The included [BLE protocol](docs/BLE_PROTOCOL.md) defines all GATT UUIDs and byte
-layouts. It is copied from the matching firmware's canonical `BLE_PROTOCOL.md`.
+- [Firmware and hardware](exoskeleton_controller/README.md)
+- [USB application](exoskeleton_controller_rust/README.md)
+- [BLE application](exoskeleton_controller_mobile/README.md)
+- [BLE protocol and persistence](exoskeleton_controller/BLE_PROTOCOL.md)
+- [GOON USB framing](exoskeleton_controller/PROTOCOL.md)

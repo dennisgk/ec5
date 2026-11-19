@@ -3,6 +3,12 @@ on: [push, pull_request]
 jobs:
   windows:
     runs-on: windows-latest
+    strategy:
+      matrix:
+        project: [exoskeleton_controller_rust, exoskeleton_controller_mobile]
+    defaults:
+      run:
+        working-directory: ${{ matrix.project }}
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
@@ -14,6 +20,9 @@ jobs:
       - run: cargo build --release --locked
   ios:
     runs-on: macos-latest
+    defaults:
+      run:
+        working-directory: exoskeleton_controller_mobile
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
